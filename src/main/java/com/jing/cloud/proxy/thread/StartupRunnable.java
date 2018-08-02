@@ -1,7 +1,8 @@
 package com.jing.cloud.proxy.thread;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -20,7 +21,6 @@ public class StartupRunnable implements Runnable {
 	private int so_backlog;//Á¬½ÓÊý
 	
 	private ChannelHandler serverChannelInitializer;
-	
 	
 	public StartupRunnable(int serverPort, int so_backlog, ChannelHandler serverChannelInitializer) {
 		this.serverPort = serverPort;
