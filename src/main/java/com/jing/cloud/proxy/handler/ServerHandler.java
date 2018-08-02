@@ -1,5 +1,9 @@
 package com.jing.cloud.proxy.handler;
 
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -22,8 +26,11 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 	
 	private ChannelGroup channelGroup;
 
-	public ServerHandler(ChannelGroup channelGroup) {
+	private Map<String, Channel> onlineProxyClient;
+	
+	public ServerHandler(ChannelGroup channelGroup, Map<String, Channel> onlineProxyClient) {
 		this.channelGroup = channelGroup;
+		this.onlineProxyClient = onlineProxyClient;
 	}
 
 	@Override
@@ -51,6 +58,9 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 				return;
 			}
 			Authentication authInfo = (Authentication)data;
+			
+			String clientId = authInfo.getClientId();
+			
 			if(!("fort".equals(authInfo.getClientId()) 
 					&& "fort".equals(authInfo.getSecret()))) {
 				message.setType(MessageCode.REGISTER_ERROR);
@@ -63,7 +73,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 			message.setData(null);
 			
 			channel.writeAndFlush(message);
-			
+			onlineProxyClient.put(clientId, channel);
 			channelGroup.add(channel);
 			return;
 		}
@@ -109,5 +119,18 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 		logger.error(cause.getMessage());
 	}
 
-	
+	private String findClientId(Channel channel) {
+		synchronized (onlineProxyClient) {
+			Set<String> keySet = onlineProxyClient.keySet();
+			Iterator<String> it = keySet.iterator();
+			while(it.hasNext()) {
+				String key = it.next();
+				Channel client = onlineProxyClient.get(key);
+				if(client == channel) {
+					return key;
+				}
+			}
+		}
+		return null;
+	}
 }
