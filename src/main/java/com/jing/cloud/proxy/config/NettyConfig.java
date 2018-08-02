@@ -24,4 +24,6 @@ public class NettyConfig {
 	public Map<String,Channel> getOnlineProxyClient(){
 		return Collections.synchronizedMap(new HashMap<String,Channel>());
 	}
+	
+	
 }
