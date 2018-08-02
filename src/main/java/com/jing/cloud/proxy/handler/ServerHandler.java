@@ -3,6 +3,10 @@ package com.jing.cloud.proxy.handler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.jing.cloud.module.Authentication;
+import com.jing.cloud.module.Message;
+import com.jing.cloud.module.MessageCode;
+
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -36,10 +40,43 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 		loss_connect_time = 0;
-
 		Channel channel = ctx.channel();
-		
+		Message message = (Message)msg;
 		logger.info(msg);
+		int type = message.getType();
+		Object data = message.getData();
+		if(type == MessageCode.REGISTER) {
+			if(data == null || !(data instanceof Authentication)) {
+				ctx.close();
+				return;
+			}
+			Authentication authInfo = (Authentication)data;
+			if(!("fort".equals(authInfo.getClientId()) 
+					&& "fort".equals(authInfo.getSecret()))) {
+				message.setType(MessageCode.REGISTER_ERROR);
+				message.setData(null);
+				channel.writeAndFlush(message);
+				ctx.close();
+				return;
+			}
+			message.setType(MessageCode.REGISTER_SUCCESS);
+			message.setData(null);
+			
+			channel.writeAndFlush(message);
+			
+			channelGroup.add(channel);
+			return;
+		}
+		
+		channel = channelGroup.find(channel.id());
+		if(channel == null) {
+			ctx.close();
+			return;
+		}
+		
+		if(type == MessageCode.HEARTBEAT) {
+			return;
+		}
 	}
 
 	@Override
