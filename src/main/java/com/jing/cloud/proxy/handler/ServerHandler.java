@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import com.jing.cloud.module.Authentication;
 import com.jing.cloud.module.Message;
 import com.jing.cloud.module.MessageCode;
+import com.util.pool.WaitConnectionThreadPool;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -28,9 +29,13 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 
 	private Map<String, Channel> onlineProxyClient;
 	
-	public ServerHandler(ChannelGroup channelGroup, Map<String, Channel> onlineProxyClient) {
+	private Map<String,WaitConnectionThreadPool> connectionMap;
+	
+	public ServerHandler(ChannelGroup channelGroup, Map<String, Channel> onlineProxyClient,
+			Map<String,WaitConnectionThreadPool> connectionMap) {
 		this.channelGroup = channelGroup;
 		this.onlineProxyClient = onlineProxyClient;
+		this.connectionMap = connectionMap;
 	}
 
 	@Override
@@ -86,6 +91,15 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 		
 		if(type == MessageCode.HEARTBEAT) {
 			return;
+		}
+		
+		if(type == MessageCode.CONNECTION_SUCCESS ||
+				type == MessageCode.CONNECTION_ERROR) {
+			WaitConnectionThreadPool wct = connectionMap.get(message.getToken());
+			if(wct == null) {
+				return;
+			}
+			wct.sendMessage(message);
 		}
 	}
 
