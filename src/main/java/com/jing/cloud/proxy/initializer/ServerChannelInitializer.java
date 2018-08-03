@@ -28,7 +28,7 @@ public class ServerChannelInitializer extends ChannelInitializer<SocketChannel> 
 	private Map<String,Channel> onlineProxyClient;
 	
 	@Autowired
-	private Map<String,WaitConnectionThreadPool> connectionMap;
+	private Map<String,Channel> onlineUserClient;
 	
 	@Override
 	protected void initChannel(SocketChannel sc) throws Exception {
@@ -38,7 +38,7 @@ public class ServerChannelInitializer extends ChannelInitializer<SocketChannel> 
 				new IdleStateHandler(IdleConfig.READ_IDEL_TIME_OUT, IdleConfig.WRITE_IDEL_TIME_OUT, IdleConfig.ALL_IDEL_TIME_OUT),
 				new MessageDecoder(),
 				new MessageEncoder(),
-				new ServerHandler(channelGroup,onlineProxyClient,connectionMap)
+				new ServerHandler(channelGroup,onlineProxyClient,onlineUserClient)
 		);
 	}
 

@@ -27,6 +27,11 @@ public class NettyConfig {
 		return Collections.synchronizedMap(new HashMap<String,Channel>());
 	}
 	
+	@Bean("onlineUserClient")
+	public Map<String,Channel> getOnlineUserClient(){
+		return Collections.synchronizedMap(new HashMap<String,Channel>());
+	}
+	
 	@Bean("connectionMap")
 	public Map<String,WaitConnectionThreadPool> getWaitConnectionThreadPool(){
 		return Collections.synchronizedMap(new HashMap<String,WaitConnectionThreadPool>());

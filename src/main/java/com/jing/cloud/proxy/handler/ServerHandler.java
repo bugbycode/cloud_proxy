@@ -13,6 +13,7 @@ import com.jing.cloud.module.Message;
 import com.jing.cloud.module.MessageCode;
 import com.util.pool.WaitConnectionThreadPool;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -30,24 +31,25 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 
 	private Map<String, Channel> onlineProxyClient;
 	
-	private Map<String,WaitConnectionThreadPool> connectionMap;
+	private Map<String,Channel> onlineUserClient;
 	
-	public ServerHandler(ChannelGroup channelGroup, Map<String, Channel> onlineProxyClient,
-			Map<String,WaitConnectionThreadPool> connectionMap) {
+	public ServerHandler(ChannelGroup channelGroup, 
+			Map<String, Channel> onlineProxyClient,
+			Map<String,Channel> onlineUserClient) {
 		this.channelGroup = channelGroup;
 		this.onlineProxyClient = onlineProxyClient;
-		this.connectionMap = connectionMap;
+		this.onlineUserClient = onlineUserClient;
 	}
 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
-		logger.info("客户端与服务端连接开始...");
+		//logger.info("客户端与服务端连接开始...");
 	}
 
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
 		channelGroup.remove(ctx.channel());
-		logger.info("客户端与服务端连接关闭...");
+		//logger.info("客户端与服务端连接关闭...");
 	}
 
 	@Override
@@ -55,9 +57,10 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 		loss_connect_time = 0;
 		Channel channel = ctx.channel();
 		Message message = (Message)msg;
-		logger.info(msg);
+		logger.info("agent recv " + message);
 		int type = message.getType();
 		Object data = message.getData();
+		String token = message.getToken();
 		if(type == MessageCode.REGISTER) {
 			if(data == null || !(data instanceof Authentication)) {
 				ctx.close();
@@ -90,30 +93,38 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 			return;
 		}
 		
-		if(type == MessageCode.HEARTBEAT) {
+		if(type == MessageCode.HEARTBEAT || type == MessageCode.CONNECTION_SUCCESS) {
 			return;
 		}
 		
-		if(type == MessageCode.CONNECTION_SUCCESS ||
-				type == MessageCode.CONNECTION_ERROR) {
-			WaitConnectionThreadPool wct = connectionMap.get(message.getToken());
-			if(wct == null) {
+		if(type == MessageCode.CONNECTION_ERROR) {
+			Channel userChannel = onlineUserClient.get(token);
+			if(userChannel == null) {
 				return;
 			}
-			if(type == MessageCode.CONNECTION_SUCCESS) {
-				ForwardStartupRunnable fsr = new ForwardStartupRunnable(60000, 50, 
-						channel,message.getToken(),connectionMap);
-				new Thread(fsr).start();
-			}else {
-				wct.sendMessage(message);
+			logger.error("无法连接到目标设备，连接已关闭");
+			userChannel.close();
+		}
+		
+		if(type == MessageCode.TRANSFER_DATA) {
+			Channel userChannel = onlineUserClient.get(token);
+			if(userChannel == null) {
+				return;
 			}
+			byte[] data_buf = (byte[]) message.getData();
+			
+			System.out.println("recv " + new String(data_buf));
+			
+			ByteBuf buf = ctx.alloc().buffer(data_buf.length);
+			buf.writeBytes(data_buf);
+			userChannel.writeAndFlush(buf);
 		}
 	}
 
 	@Override
 	public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
 		ctx.flush();
-		logger.info("信息接收完毕...");
+		//logger.info("信息接收完毕...");
 	}
 
 	@Override

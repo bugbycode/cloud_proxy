@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.jing.cloud.forward.thread.ForwardStartupRunnable;
 import com.jing.cloud.module.ConnectionInfo;
 import com.jing.cloud.module.Message;
 import com.jing.cloud.module.MessageCode;
@@ -27,6 +28,9 @@ public class SsoController {
 	@Autowired
 	private Map<String,WaitConnectionThreadPool> connectionMap;
 	
+	@Autowired
+	private Map<String,Channel> onlineUserClient;
+	
 	@RequestMapping("/getChannel")
 	@ResponseBody
 	public Map<String,Object> getChannel(
@@ -44,8 +48,15 @@ public class SsoController {
 			map.put("code", 1);
 			map.put("msg", "Con't find agent client.");
 		}else {
+			ForwardStartupRunnable fsr = new ForwardStartupRunnable(60000, 50, host, port, channel, onlineUserClient);
+			new Thread(fsr).start();
 			
-			Message message = new Message();
+			map.put("code", 0);
+			map.put("msg", "success");
+			map.put("host", "127.0.0.1");
+			map.put("port", port);
+			
+			/*Message message = new Message();
 			String token = RandomUtil.GetGuid32();
 			ConnectionInfo conn = new ConnectionInfo(host, port);
 			
@@ -73,7 +84,7 @@ public class SsoController {
 				map.put("msg", "success");
 				map.put("host", "127.0.0.1");
 				map.put("port", con.getPort());
-			}
+			}*/
 		}
 		
 		return map;
