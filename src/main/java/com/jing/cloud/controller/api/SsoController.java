@@ -64,14 +64,15 @@ public class SsoController {
 			}
 			
 			Message result = wct.getResultMessage();
-			if(result == null) {
+			if(result == null || result.getType() == MessageCode.CONNECTION_ERROR) {
 				map.put("code", 1);
 				map.put("msg", "Create channel failed.");
 			}else {
+				ConnectionInfo con = (ConnectionInfo) result.getData();
 				map.put("code", 0);
 				map.put("msg", "success");
 				map.put("host", "127.0.0.1");
-				map.put("port", 5001);
+				map.put("port", con.getPort());
 			}
 		}
 		

@@ -7,6 +7,7 @@ import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.jing.cloud.forward.thread.ForwardStartupRunnable;
 import com.jing.cloud.module.Authentication;
 import com.jing.cloud.module.Message;
 import com.jing.cloud.module.MessageCode;
@@ -99,7 +100,13 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 			if(wct == null) {
 				return;
 			}
-			wct.sendMessage(message);
+			if(type == MessageCode.CONNECTION_SUCCESS) {
+				ForwardStartupRunnable fsr = new ForwardStartupRunnable(60000, 50, 
+						channel, message.getToken(),connectionMap);
+				new Thread(fsr).start();
+			}else {
+				wct.sendMessage(message);
+			}
 		}
 	}
 

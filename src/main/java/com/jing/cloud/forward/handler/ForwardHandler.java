@@ -8,6 +8,7 @@ import com.jing.cloud.module.MessageCode;
 import com.util.RandomUtil;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.group.ChannelGroup;
@@ -16,12 +17,14 @@ public class ForwardHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
 	private final Logger logger = LogManager.getLogger(ForwardHandler.class);
 	
-	private ChannelGroup channelGroup;
+	private Channel agentChannel;
 	
 	private String token;
+
 	
-	public ForwardHandler(ChannelGroup channelGroup) {
-		this.channelGroup = channelGroup;
+	public ForwardHandler(Channel agentChannel, String token) {
+		this.agentChannel = agentChannel;
+		this.token = token;
 	}
 
 	@Override
@@ -41,7 +44,7 @@ public class ForwardHandler extends SimpleChannelInboundHandler<ByteBuf> {
 		msg.readBytes(data);
 		Message message = new Message(token, MessageCode.TRANSFER_DATA, data);
 		logger.info("server : " + message);
-		channelGroup.writeAndFlush(message);
+		agentChannel.writeAndFlush(message);
 	}
 
 	@Override
