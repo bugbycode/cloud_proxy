@@ -102,7 +102,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 			}
 			if(type == MessageCode.CONNECTION_SUCCESS) {
 				ForwardStartupRunnable fsr = new ForwardStartupRunnable(60000, 50, 
-						channel, message.getToken(),connectionMap);
+						channel,message.getToken(),connectionMap);
 				new Thread(fsr).start();
 			}else {
 				wct.sendMessage(message);

@@ -30,7 +30,6 @@ public class ForwardHandler extends SimpleChannelInboundHandler<ByteBuf> {
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
 		logger.info("用户客户端与服务端连接开始...");
-		token = RandomUtil.GetGuid32();
 	}
 
 	@Override
