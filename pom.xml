@@ -14,7 +14,7 @@
 		<version>1.5.6.RELEASE</version>
 	</parent>
 	<properties>
-		<tomcat.version>8.5.31</tomcat.version>
+		<tomcat.version>8.5.32</tomcat.version>
 	</properties>
 
 	<dependencies>
