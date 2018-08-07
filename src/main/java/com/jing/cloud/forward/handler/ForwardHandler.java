@@ -131,7 +131,7 @@ public class ForwardHandler extends SimpleChannelInboundHandler<ByteBuf> {
 			try {
 				while(!isClosed) {
 					Message msg = read();
-					logger.info("transfer " + msg);
+					//logger.info("transfer " + msg);
 					if(msg.getType() == MessageCode.CLOSE_CONNECTION) {
 						continue;
 					}
