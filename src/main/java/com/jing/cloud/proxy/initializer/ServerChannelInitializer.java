@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 
 import com.jing.cloud.config.IdleConfig;
 import com.jing.cloud.forward.handler.ForwardHandler;
-import com.jing.cloud.forward.server.ForwardServer;
 import com.jing.cloud.handler.MessageDecoder;
 import com.jing.cloud.handler.MessageEncoder;
 import com.jing.cloud.module.HandlerConst;

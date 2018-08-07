@@ -1,8 +1,6 @@
 package com.jing.cloud.proxy.handler;
 
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -11,9 +9,7 @@ import com.jing.cloud.forward.handler.ForwardHandler;
 import com.jing.cloud.module.Authentication;
 import com.jing.cloud.module.Message;
 import com.jing.cloud.module.MessageCode;
-import com.util.pool.WaitConnectionThreadPool;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
