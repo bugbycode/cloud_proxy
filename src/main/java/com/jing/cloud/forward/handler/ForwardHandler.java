@@ -146,7 +146,7 @@ public class ForwardHandler extends SimpleChannelInboundHandler<ByteBuf> {
 					channel.writeAndFlush(buff);
 				}
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				logger.error(e.getMessage());
 			}
 		}
 		
