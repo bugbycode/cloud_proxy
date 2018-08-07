@@ -89,13 +89,13 @@ public class ForwardHandler extends SimpleChannelInboundHandler<ByteBuf> {
 		//等待连接结果
 		Message msg = read();
 		
-		logger.info("连接结果 " + msg);
-		
 		if(msg.getType() == MessageCode.CONNECTION_ERROR || 
 				msg.getType() == MessageCode.CLOSE_CONNECTION) {
 			ctx.close();
+			logger.info("Connection to " + host + ":" + port + " failed.");
 		}else {
 			new WorkThread(ctx).start();
+			logger.info("Connection to " + host + ":" + port + " successfully.");
 		}
 	}
 
