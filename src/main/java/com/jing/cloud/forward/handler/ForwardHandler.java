@@ -30,11 +30,17 @@ public class ForwardHandler extends SimpleChannelInboundHandler<ByteBuf> {
 	
 	private boolean isClosed = true;
 	
-	public ForwardHandler(Channel proxyChannel, Map<String, ForwardHandler> appHandlerMap) {
+	private String host = "";
+	
+	private int port;
+	
+	public ForwardHandler(String host,int port,Channel proxyChannel, Map<String, ForwardHandler> appHandlerMap) {
 		this.proxyChannel = proxyChannel;
 		this.appHandlerMap = appHandlerMap;
 		this.token = RandomUtil.GetGuid32();
 		this.queue = new LinkedList<Message>();
+		this.host = host;
+		this.port = port;
 	}
 	
 	@Override
@@ -77,7 +83,7 @@ public class ForwardHandler extends SimpleChannelInboundHandler<ByteBuf> {
 		Message message = new Message();
 		message.setType(MessageCode.CONNECTION);
 		message.setToken(token);
-		ConnectionInfo conn = new ConnectionInfo("192.168.1.199", 60000);
+		ConnectionInfo conn = new ConnectionInfo(host, port);
 		message.setData(conn);
 		proxyChannel.writeAndFlush(message);
 		//等待连接结果

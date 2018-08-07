@@ -22,8 +22,6 @@ public class ForwardServer implements Runnable {
 
 	private final Logger logger = LogManager.getLogger(ForwardServer.class);
 	
-	private int serverPort = 60000;
-	
 	private int so_backlog = 50;
 	
 	private EventLoopGroup boss;
@@ -34,10 +32,19 @@ public class ForwardServer implements Runnable {
 	
 	private Map<String,ForwardHandler> appHandlerMap;
 	
-	public ForwardServer(Channel proxyChannel,
+	private String host = "";
+	
+	private int port;
+	
+	private int proxyPort;
+	
+	public ForwardServer(String host,int port,int proxyPort,Channel proxyChannel,
 			Map<String,ForwardHandler> appHandlerMap) {
 		this.proxyChannel = proxyChannel;
 		this.appHandlerMap = appHandlerMap;
+		this.host = host;
+		this.port = port;
+		this.proxyPort = proxyPort;
 	}
 	
 	@Override
@@ -62,16 +69,16 @@ public class ForwardServer implements Runnable {
 
 					@Override
 					protected void initChannel(SocketChannel ch) throws Exception {
-						ch.pipeline().addLast(new ForwardHandler(proxyChannel,appHandlerMap));
+						ch.pipeline().addLast(new ForwardHandler(host,port,proxyChannel,appHandlerMap));
 					}
 				});
 
 		// 绑定端口，同步等待成功
-		bootstrap.bind(serverPort).addListener(new ChannelFutureListener() {
+		bootstrap.bind(proxyPort).addListener(new ChannelFutureListener() {
 			@Override
 			public void operationComplete(ChannelFuture future) throws Exception {
 				if (future.isSuccess()) {
-					logger.info("代理服务开启成功，端口号为 " + serverPort + " ……");
+					logger.info("代理服务开启成功，端口号为 " + proxyPort + " ……");
 				} else {
 					logger.info("代理服务开启失败……");
 				}
