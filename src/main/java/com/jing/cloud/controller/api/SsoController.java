@@ -1,5 +1,6 @@
 package com.jing.cloud.controller.api;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -9,12 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.jing.cloud.forward.thread.ForwardStartupRunnable;
-import com.jing.cloud.module.ConnectionInfo;
-import com.jing.cloud.module.Message;
-import com.jing.cloud.module.MessageCode;
-import com.util.RandomUtil;
-import com.util.pool.WaitConnectionThreadPool;
+import com.jing.cloud.forward.handler.ForwardHandler;
+import com.jing.cloud.forward.server.ForwardServer;
 
 import io.netty.channel.Channel;
 
@@ -26,10 +23,7 @@ public class SsoController {
 	private Map<String,Channel> onlineProxyClient;
 	
 	@Autowired
-	private Map<String,WaitConnectionThreadPool> connectionMap;
-	
-	@Autowired
-	private Map<String,Channel> onlineUserClient;
+	public Map<String,ForwardHandler> appHandlerMap;
 	
 	@RequestMapping("/getChannel")
 	@ResponseBody
@@ -39,7 +33,7 @@ public class SsoController {
 			@RequestParam(name="host",defaultValue = "") 
 			String host,
 			@RequestParam(name="port",defaultValue = "0") 
-			int port){
+			int port) throws IOException{
 		Map<String,Object> map = new HashMap<String,Object>();
 		
 		Channel channel = onlineProxyClient.get(clientId);
@@ -48,43 +42,12 @@ public class SsoController {
 			map.put("code", 1);
 			map.put("msg", "Con't find agent client.");
 		}else {
-			ForwardStartupRunnable fsr = new ForwardStartupRunnable(60000, 50, host, port, channel, onlineUserClient);
-			new Thread(fsr).start();
-			
+			ForwardServer server = new ForwardServer(channel, appHandlerMap);
+			server.run();
 			map.put("code", 0);
 			map.put("msg", "success");
 			map.put("host", "127.0.0.1");
-			map.put("port", port);
-			
-			/*Message message = new Message();
-			String token = RandomUtil.GetGuid32();
-			ConnectionInfo conn = new ConnectionInfo(host, port);
-			
-			message.setType(MessageCode.CONNECTION);
-			message.setData(conn);
-			message.setToken(token);
-			
-			WaitConnectionThreadPool wct = new WaitConnectionThreadPool(token, connectionMap);
-			
-			channel.writeAndFlush(message);
-			
-			try {
-				wct.waitPoolClose();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			
-			Message result = wct.getResultMessage();
-			if(result == null || result.getType() == MessageCode.CONNECTION_ERROR) {
-				map.put("code", 1);
-				map.put("msg", "Create channel failed.");
-			}else {
-				ConnectionInfo con = (ConnectionInfo) result.getData();
-				map.put("code", 0);
-				map.put("msg", "success");
-				map.put("host", "127.0.0.1");
-				map.put("port", con.getPort());
-			}*/
+			map.put("port", 60000);
 		}
 		
 		return map;
@@ -95,10 +58,12 @@ public class SsoController {
 	public Map<String,Object> closeChannel(
 			@RequestParam(name="port",defaultValue = "0") 
 			int port
-			){
+			) throws IOException{
+		
 		Map<String,Object> map = new HashMap<String,Object>();
 		map.put("code", 0);
 		map.put("msg", "success");
+		
 		return map;
 	}
 }

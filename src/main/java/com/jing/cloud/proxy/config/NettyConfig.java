@@ -7,7 +7,7 @@ import java.util.Map;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.util.pool.WaitConnectionThreadPool;
+import com.jing.cloud.forward.handler.ForwardHandler;
 
 import io.netty.channel.Channel;
 import io.netty.channel.group.ChannelGroup;
@@ -27,15 +27,9 @@ public class NettyConfig {
 		return Collections.synchronizedMap(new HashMap<String,Channel>());
 	}
 	
-	@Bean("onlineUserClient")
-	public Map<String,Channel> getOnlineUserClient(){
-		return Collections.synchronizedMap(new HashMap<String,Channel>());
+	@Bean("appHandlerMap")
+	public Map<String,ForwardHandler> appHandlerMap(){
+		return Collections.synchronizedMap(new HashMap<String,ForwardHandler>());
 	}
-	
-	@Bean("connectionMap")
-	public Map<String,WaitConnectionThreadPool> getWaitConnectionThreadPool(){
-		return Collections.synchronizedMap(new HashMap<String,WaitConnectionThreadPool>());
-	}
-	
 	
 }

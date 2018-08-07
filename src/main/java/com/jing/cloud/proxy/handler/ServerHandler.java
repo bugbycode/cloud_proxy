@@ -7,7 +7,7 @@ import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.jing.cloud.forward.thread.ForwardStartupRunnable;
+import com.jing.cloud.forward.handler.ForwardHandler;
 import com.jing.cloud.module.Authentication;
 import com.jing.cloud.module.Message;
 import com.jing.cloud.module.MessageCode;
@@ -31,25 +31,25 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 
 	private Map<String, Channel> onlineProxyClient;
 	
-	private Map<String,Channel> onlineUserClient;
-	
+	public Map<String,ForwardHandler> appHandlerMap;
+
 	public ServerHandler(ChannelGroup channelGroup, 
 			Map<String, Channel> onlineProxyClient,
-			Map<String,Channel> onlineUserClient) {
+			Map<String,ForwardHandler> appHandlerMap) {
 		this.channelGroup = channelGroup;
 		this.onlineProxyClient = onlineProxyClient;
-		this.onlineUserClient = onlineUserClient;
+		this.appHandlerMap = appHandlerMap;
 	}
 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
-		//logger.info("客户端与服务端连接开始...");
+		logger.info("代理客户端与服务端连接开始...");
 	}
 
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
 		channelGroup.remove(ctx.channel());
-		//logger.info("客户端与服务端连接关闭...");
+		logger.info("代理客户端与服务端连接关闭...");
 	}
 
 	@Override
@@ -57,7 +57,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 		loss_connect_time = 0;
 		Channel channel = ctx.channel();
 		Message message = (Message)msg;
-		logger.info("agent recv " + message);
+		//logger.info("agent recv " + message);
 		int type = message.getType();
 		Object data = message.getData();
 		String token = message.getToken();
@@ -93,31 +93,17 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 			return;
 		}
 		
-		if(type == MessageCode.HEARTBEAT || type == MessageCode.CONNECTION_SUCCESS) {
+		if(type == MessageCode.HEARTBEAT) {
 			return;
 		}
 		
-		if(type == MessageCode.CONNECTION_ERROR) {
-			Channel userChannel = onlineUserClient.get(token);
-			if(userChannel == null) {
-				return;
+		if(type == MessageCode.CONNECTION_ERROR || type == MessageCode.CONNECTION_SUCCESS ||
+				type == MessageCode.CLOSE_CONNECTION || type == MessageCode.TRANSFER_DATA) {
+			ForwardHandler forward = appHandlerMap.get(token);
+			if(forward != null) {
+				forward.sendMessage(message);
 			}
-			logger.error("无法连接到目标设备，连接已关闭");
-			userChannel.close();
-		}
-		
-		if(type == MessageCode.TRANSFER_DATA) {
-			Channel userChannel = onlineUserClient.get(token);
-			if(userChannel == null) {
-				return;
-			}
-			byte[] data_buf = (byte[]) message.getData();
-			
-			System.out.println("recv " + new String(data_buf));
-			
-			ByteBuf buf = ctx.alloc().buffer(data_buf.length);
-			buf.writeBytes(data_buf);
-			userChannel.writeAndFlush(buf);
+			return;
 		}
 	}
 
@@ -150,19 +136,5 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 		ctx.close();
 		logger.error(cause.getMessage());
 	}
-
-	private String findClientId(Channel channel) {
-		synchronized (onlineProxyClient) {
-			Set<String> keySet = onlineProxyClient.keySet();
-			Iterator<String> it = keySet.iterator();
-			while(it.hasNext()) {
-				String key = it.next();
-				Channel client = onlineProxyClient.get(key);
-				if(client == channel) {
-					return key;
-				}
-			}
-		}
-		return null;
-	}
+	
 }
