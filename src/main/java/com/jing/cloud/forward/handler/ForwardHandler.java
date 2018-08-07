@@ -101,6 +101,7 @@ public class ForwardHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+		logger.info("用户客户端与服务器断开连接......");
 		//断开连接
 		Message message = new Message();
 		message.setType(MessageCode.CLOSE_CONNECTION);
@@ -111,7 +112,7 @@ public class ForwardHandler extends SimpleChannelInboundHandler<ByteBuf> {
 		isClosed = true;
 		notifyTask();
 	}
-
+	
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
 		cause.printStackTrace();
