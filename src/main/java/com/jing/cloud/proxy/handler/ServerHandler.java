@@ -28,6 +28,8 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 	private Map<String, Channel> onlineProxyClient;
 	
 	public Map<String,ForwardHandler> appHandlerMap;
+	
+	private String clientId = "";
 
 	public ServerHandler(ChannelGroup channelGroup, 
 			Map<String, Channel> onlineProxyClient,
@@ -45,7 +47,8 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
 		channelGroup.remove(ctx.channel());
-		logger.info("Agent connection closed...");
+		onlineProxyClient.remove(this.clientId);
+		logger.info("Agent connection closed... " + clientId);
 	}
 
 	@Override
@@ -65,14 +68,18 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 			
 			String clientId = authInfo.getClientId();
 			
-			if(!("fort".equals(authInfo.getClientId()) 
-					&& "fort".equals(authInfo.getSecret()))) {
+			Channel clientChannel = onlineProxyClient.get(clientId);
+			
+			if(!(clientChannel != null)) {
 				message.setType(MessageCode.REGISTER_ERROR);
 				message.setData(null);
 				channel.writeAndFlush(message);
 				ctx.close();
 				return;
 			}
+			
+			this.clientId = clientId;
+			
 			message.setType(MessageCode.REGISTER_SUCCESS);
 			message.setData(null);
 			
