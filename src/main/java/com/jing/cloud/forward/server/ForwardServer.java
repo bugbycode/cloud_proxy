@@ -38,13 +38,16 @@ public class ForwardServer implements Runnable {
 	
 	private int proxyPort;
 	
-	public ForwardServer(String host,int port,int proxyPort,Channel proxyChannel,
+	private boolean closeApp = true;
+	
+	public ForwardServer(String host,int port,int proxyPort,boolean closeApp,Channel proxyChannel,
 			Map<String,ForwardHandler> appHandlerMap) {
 		this.proxyChannel = proxyChannel;
 		this.appHandlerMap = appHandlerMap;
 		this.host = host;
 		this.port = port;
 		this.proxyPort = proxyPort;
+		this.closeApp = closeApp;
 	}
 	
 	@Override
@@ -69,7 +72,7 @@ public class ForwardServer implements Runnable {
 
 					@Override
 					protected void initChannel(SocketChannel ch) throws Exception {
-						ch.pipeline().addLast(new ForwardHandler(host,port,proxyChannel,appHandlerMap));
+						ch.pipeline().addLast(new ForwardHandler(host,port,closeApp,proxyChannel,appHandlerMap));
 					}
 				});
 

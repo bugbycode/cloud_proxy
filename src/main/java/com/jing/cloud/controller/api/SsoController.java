@@ -35,7 +35,9 @@ public class SsoController {
 			@RequestParam(name="port",defaultValue = "0") 
 			int port,
 			@RequestParam(name="proxyPort",defaultValue = "0") 
-			int proxyPort
+			int proxyPort,
+			@RequestParam(name="closeApp",defaultValue = "true") 
+			boolean closeApp
 			) throws IOException{
 		Map<String,Object> map = new HashMap<String,Object>();
 		
@@ -45,7 +47,7 @@ public class SsoController {
 			map.put("code", 1);
 			map.put("msg", "Con't find agent client.");
 		}else {
-			ForwardServer server = new ForwardServer(host,port,proxyPort,channel, appHandlerMap);
+			ForwardServer server = new ForwardServer(host,port,proxyPort,closeApp,channel, appHandlerMap);
 			server.run();
 			map.put("code", 0);
 			map.put("msg", "success");

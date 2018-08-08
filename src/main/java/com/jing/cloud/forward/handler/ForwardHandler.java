@@ -34,13 +34,16 @@ public class ForwardHandler extends SimpleChannelInboundHandler<ByteBuf> {
 	
 	private int port;
 	
-	public ForwardHandler(String host,int port,Channel proxyChannel, Map<String, ForwardHandler> appHandlerMap) {
+	private boolean closeApp = true;
+	
+	public ForwardHandler(String host,int port,boolean closeApp,Channel proxyChannel, Map<String, ForwardHandler> appHandlerMap) {
 		this.proxyChannel = proxyChannel;
 		this.appHandlerMap = appHandlerMap;
 		this.token = RandomUtil.GetGuid32();
 		this.queue = new LinkedList<Message>();
 		this.host = host;
 		this.port = port;
+		this.closeApp = closeApp;
 	}
 	
 	@Override
@@ -134,6 +137,9 @@ public class ForwardHandler extends SimpleChannelInboundHandler<ByteBuf> {
 					Message msg = read();
 					//logger.info("transfer " + msg);
 					if(msg.getType() == MessageCode.CLOSE_CONNECTION) {
+						if(closeApp) {
+							ctx.close();
+						}
 						continue;
 					}
 					
