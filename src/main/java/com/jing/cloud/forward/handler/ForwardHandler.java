@@ -36,7 +36,9 @@ public class ForwardHandler extends SimpleChannelInboundHandler<ByteBuf> {
 	
 	private boolean closeApp = true;
 	
-	public ForwardHandler(String host,int port,boolean closeApp,Channel proxyChannel, Map<String, ForwardHandler> appHandlerMap) {
+	public ForwardHandler(String host,int port,String clientId,
+			boolean closeApp,Channel proxyChannel, 
+			Map<String, ForwardHandler> appHandlerMap) {
 		this.proxyChannel = proxyChannel;
 		this.appHandlerMap = appHandlerMap;
 		this.token = RandomUtil.GetGuid32();

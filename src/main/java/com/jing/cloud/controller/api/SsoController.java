@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.jing.cloud.forward.handler.ForwardHandler;
 import com.jing.cloud.forward.server.ForwardServer;
+import com.jing.cloud.proxy.handler.ServerHandler;
 
 import io.netty.channel.Channel;
 
@@ -27,6 +28,9 @@ public class SsoController {
 	
 	@Autowired
 	private Map<Integer,ForwardServer> forwardServerMap;
+	
+	@Autowired
+	public Map<String,ServerHandler> serverHandlerMap;
 	
 	@RequestMapping("/getChannel")
 	@ResponseBody
@@ -50,8 +54,8 @@ public class SsoController {
 			map.put("code", 1);
 			map.put("msg", "Con't find agent client.");
 		}else {
-			ForwardServer server = new ForwardServer(host,port,proxyPort,closeApp,
-					channel, appHandlerMap,forwardServerMap);
+			ForwardServer server = new ForwardServer(host,port,proxyPort,clientId,closeApp,
+					channel, appHandlerMap,forwardServerMap,serverHandlerMap);
 			server.run();
 			
 			boolean isOpen = server.waitFinish();

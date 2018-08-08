@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 
 import com.jing.cloud.forward.handler.ForwardHandler;
 import com.jing.cloud.forward.server.ForwardServer;
+import com.jing.cloud.proxy.handler.ServerHandler;
 
 import io.netty.channel.Channel;
 import io.netty.channel.group.ChannelGroup;
@@ -36,5 +37,10 @@ public class NettyConfig {
 	@Bean("forwardServerMap")
 	public Map<Integer,ForwardServer> getForwardServer(){
 		return Collections.synchronizedMap(new HashMap<Integer,ForwardServer>());
+	}
+	
+	@Bean("serverHandlerMap")
+	public Map<String,ServerHandler> getServerHandler(){
+		return Collections.synchronizedMap(new HashMap<String,ServerHandler>());
 	}
 }

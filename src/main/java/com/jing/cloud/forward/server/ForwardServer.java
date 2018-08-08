@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.jing.cloud.forward.handler.ForwardHandler;
+import com.jing.cloud.proxy.handler.ServerHandler;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -30,9 +31,13 @@ public class ForwardServer implements Runnable {
 	
 	private Channel proxyChannel;
 	
+	private String clientId = "";
+	
 	private Map<String,ForwardHandler> appHandlerMap;
 	
 	private Map<Integer,ForwardServer> forwardServerMap;
+	
+	public Map<String,ServerHandler> serverHandlerMap;
 	
 	private String host = "";
 	
@@ -47,16 +52,20 @@ public class ForwardServer implements Runnable {
 	private boolean isOpen = false;
 	
 	public ForwardServer(String host,int port,int proxyPort,
+			String clientId,
 			boolean closeApp,Channel proxyChannel,
 			Map<String,ForwardHandler> appHandlerMap,
-			Map<Integer,ForwardServer> forwardServerMap) {
+			Map<Integer,ForwardServer> forwardServerMap,
+			Map<String,ServerHandler> serverHandlerMap) {
 		this.proxyChannel = proxyChannel;
 		this.appHandlerMap = appHandlerMap;
 		this.forwardServerMap = forwardServerMap;
+		this.serverHandlerMap = serverHandlerMap;
 		this.host = host;
 		this.port = port;
 		this.proxyPort = proxyPort;
 		this.closeApp = closeApp;
+		this.clientId = clientId;
 	}
 	
 	@Override
@@ -73,7 +82,7 @@ public class ForwardServer implements Runnable {
 
 					@Override
 					protected void initChannel(SocketChannel ch) throws Exception {
-						ch.pipeline().addLast(new ForwardHandler(host,port,closeApp,proxyChannel,appHandlerMap));
+						ch.pipeline().addLast(new ForwardHandler(host,port,clientId,closeApp,proxyChannel,appHandlerMap));
 					}
 				});
 
@@ -83,6 +92,10 @@ public class ForwardServer implements Runnable {
 				isFinish = true;
 				if (future.isSuccess()) {
 					forwardServerMap.put(proxyPort, ForwardServer.this);
+					ServerHandler handler = serverHandlerMap.get(clientId);
+					if(handler != null) {
+						handler.addForwardServer(ForwardServer.this);
+					}
 					isOpen = true;
 					logger.info("Forward server startup successfully, port " + proxyPort + "......");
 				} else {
@@ -94,9 +107,14 @@ public class ForwardServer implements Runnable {
 	}
 	
 	public void close() {
-		boss.shutdownGracefully();
-		worker.shutdownGracefully();
+		if(boss != null) {
+			boss.shutdownGracefully();
+		}
+		if(worker != null) {
+			worker.shutdownGracefully();
+		}
 		forwardServerMap.remove(proxyPort);
+		logger.info("Forward server shutdown, port " + proxyPort + "......");
 	}
 	
 	public synchronized boolean waitFinish() throws InterruptedException {

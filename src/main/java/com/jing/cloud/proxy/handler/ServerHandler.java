@@ -1,11 +1,13 @@
 package com.jing.cloud.proxy.handler;
 
+import java.util.LinkedList;
 import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.jing.cloud.forward.handler.ForwardHandler;
+import com.jing.cloud.forward.server.ForwardServer;
 import com.jing.cloud.module.Authentication;
 import com.jing.cloud.module.Message;
 import com.jing.cloud.module.MessageCode;
@@ -30,13 +32,20 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 	public Map<String,ForwardHandler> appHandlerMap;
 	
 	private String clientId = "";
+	
+	private LinkedList<ForwardServer> queue;
+	
+	public Map<String,ServerHandler> serverHandlerMap;
 
 	public ServerHandler(ChannelGroup channelGroup, 
 			Map<String, Channel> onlineProxyClient,
-			Map<String,ForwardHandler> appHandlerMap) {
+			Map<String,ForwardHandler> appHandlerMap,
+			Map<String,ServerHandler> serverHandlerMap) {
 		this.channelGroup = channelGroup;
 		this.onlineProxyClient = onlineProxyClient;
 		this.appHandlerMap = appHandlerMap;
+		this.queue = new LinkedList<ForwardServer>();
+		this.serverHandlerMap = serverHandlerMap;
 	}
 
 	@Override
@@ -49,6 +58,11 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
 		channelGroup.remove(ctx.channel());
 		onlineProxyClient.remove(this.clientId);
+		
+		while(!queue.isEmpty()) {
+			queue.removeFirst().close();
+		}
+		
 		logger.info("Agent connection closed... " + clientId);
 	}
 
@@ -87,6 +101,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 			channel.writeAndFlush(message);
 			onlineProxyClient.put(clientId, channel);
 			channelGroup.add(channel);
+			serverHandlerMap.put(clientId, this);
 			return;
 		}
 		
@@ -136,6 +151,10 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
 		ctx.close();
 		logger.error(cause.getMessage());
+	}
+	
+	public void addForwardServer(ForwardServer server) {
+		queue.add(server);
 	}
 	
 }

@@ -31,6 +31,9 @@ public class ServerChannelInitializer extends ChannelInitializer<SocketChannel> 
 	@Autowired
 	public Map<String,ForwardHandler> appHandlerMap;
 	
+	@Autowired
+	public Map<String,ServerHandler> serverHandlerMap;
+	
 	@Override
 	protected void initChannel(SocketChannel sc) throws Exception {
 		ChannelPipeline p = sc.pipeline();
@@ -40,7 +43,7 @@ public class ServerChannelInitializer extends ChannelInitializer<SocketChannel> 
 						HandlerConst.LENGTH_FIELD_LENGTH, HandlerConst.LENGTH_AD_JUSTMENT, 
 						HandlerConst.INITIAL_BYTES_TO_STRIP),
 				new MessageEncoder(),
-				new ServerHandler(channelGroup,onlineProxyClient,appHandlerMap)
+				new ServerHandler(channelGroup,onlineProxyClient,appHandlerMap,serverHandlerMap)
 		);
 		
 	}
