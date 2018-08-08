@@ -32,6 +32,8 @@ public class ForwardServer implements Runnable {
 	
 	private Map<String,ForwardHandler> appHandlerMap;
 	
+	private Map<Integer,ForwardServer> forwardServerMap;
+	
 	private String host = "";
 	
 	private int port;
@@ -40,10 +42,17 @@ public class ForwardServer implements Runnable {
 	
 	private boolean closeApp = true;
 	
-	public ForwardServer(String host,int port,int proxyPort,boolean closeApp,Channel proxyChannel,
-			Map<String,ForwardHandler> appHandlerMap) {
+	private boolean isFinish = false;
+	
+	private boolean isOpen = false;
+	
+	public ForwardServer(String host,int port,int proxyPort,
+			boolean closeApp,Channel proxyChannel,
+			Map<String,ForwardHandler> appHandlerMap,
+			Map<Integer,ForwardServer> forwardServerMap) {
 		this.proxyChannel = proxyChannel;
 		this.appHandlerMap = appHandlerMap;
+		this.forwardServerMap = forwardServerMap;
 		this.host = host;
 		this.port = port;
 		this.proxyPort = proxyPort;
@@ -71,11 +80,15 @@ public class ForwardServer implements Runnable {
 		bootstrap.bind(proxyPort).addListener(new ChannelFutureListener() {
 			@Override
 			public void operationComplete(ChannelFuture future) throws Exception {
+				isFinish = true;
 				if (future.isSuccess()) {
+					forwardServerMap.put(proxyPort, ForwardServer.this);
+					isOpen = true;
 					logger.info("Forward server startup successfully, port " + proxyPort + "......");
 				} else {
 					logger.info("Forward server startup failed, port " + proxyPort + "......");
 				}
+				notifyAllWait();
 			}
 		});
 	}
@@ -83,6 +96,18 @@ public class ForwardServer implements Runnable {
 	public void close() {
 		boss.shutdownGracefully();
 		worker.shutdownGracefully();
+		forwardServerMap.remove(proxyPort);
+	}
+	
+	public synchronized boolean waitFinish() throws InterruptedException {
+		while(!isFinish) {
+			wait();
+		}
+		return isOpen;
+	}
+	
+	private synchronized void notifyAllWait() {
+		this.notifyAll();
 	}
 
 }

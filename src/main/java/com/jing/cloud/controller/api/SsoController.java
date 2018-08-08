@@ -23,7 +23,10 @@ public class SsoController {
 	private Map<String,Channel> onlineProxyClient;
 	
 	@Autowired
-	public Map<String,ForwardHandler> appHandlerMap;
+	private Map<String,ForwardHandler> appHandlerMap;
+	
+	@Autowired
+	private Map<Integer,ForwardServer> forwardServerMap;
 	
 	@RequestMapping("/getChannel")
 	@ResponseBody
@@ -38,7 +41,7 @@ public class SsoController {
 			int proxyPort,
 			@RequestParam(name="closeApp",defaultValue = "true") 
 			boolean closeApp
-			) throws IOException{
+			) throws IOException, InterruptedException{
 		Map<String,Object> map = new HashMap<String,Object>();
 		
 		Channel channel = onlineProxyClient.get(clientId);
@@ -47,12 +50,21 @@ public class SsoController {
 			map.put("code", 1);
 			map.put("msg", "Con't find agent client.");
 		}else {
-			ForwardServer server = new ForwardServer(host,port,proxyPort,closeApp,channel, appHandlerMap);
+			ForwardServer server = new ForwardServer(host,port,proxyPort,closeApp,
+					channel, appHandlerMap,forwardServerMap);
 			server.run();
-			map.put("code", 0);
-			map.put("msg", "success");
-			map.put("host", "127.0.0.1");
-			map.put("port", proxyPort);
+			
+			boolean isOpen = server.waitFinish();
+			
+			if(isOpen) {
+				map.put("code", 0);
+				map.put("msg", "success");
+				map.put("host", "127.0.0.1");
+				map.put("port", proxyPort);
+			}else {
+				map.put("code", 1);
+				map.put("msg", "Bind " + proxyPort + " failed.");
+			}
 		}
 		
 		return map;
@@ -64,6 +76,11 @@ public class SsoController {
 			@RequestParam(name="port",defaultValue = "0") 
 			int port
 			) throws IOException{
+		
+		ForwardServer server = forwardServerMap.get(port);
+		if(server != null) {
+			server.close();
+		}
 		
 		Map<String,Object> map = new HashMap<String,Object>();
 		map.put("code", 0);
