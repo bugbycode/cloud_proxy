@@ -15,9 +15,12 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.util.concurrent.GlobalEventExecutor;
 
 public class ForwardServer implements Runnable {
 
@@ -51,6 +54,8 @@ public class ForwardServer implements Runnable {
 	
 	private boolean isOpen = false;
 	
+	private ChannelGroup onlineChannel;
+	
 	public ForwardServer(String host,int port,int proxyPort,
 			String clientId,
 			boolean closeApp,Channel proxyChannel,
@@ -61,6 +66,7 @@ public class ForwardServer implements Runnable {
 		this.appHandlerMap = appHandlerMap;
 		this.forwardServerMap = forwardServerMap;
 		this.serverHandlerMap = serverHandlerMap;
+		this.onlineChannel = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 		this.host = host;
 		this.port = port;
 		this.proxyPort = proxyPort;
@@ -82,7 +88,7 @@ public class ForwardServer implements Runnable {
 
 					@Override
 					protected void initChannel(SocketChannel ch) throws Exception {
-						ch.pipeline().addLast(new ForwardHandler(host,port,clientId,closeApp,proxyChannel,appHandlerMap));
+						ch.pipeline().addLast(new ForwardHandler(host,port,clientId,closeApp,proxyChannel,appHandlerMap,onlineChannel));
 					}
 				});
 
@@ -97,6 +103,9 @@ public class ForwardServer implements Runnable {
 						handler.addForwardServer(ForwardServer.this);
 					}
 					isOpen = true;
+					
+					new WorkThread().start();
+					
 					logger.info("Forward server startup successfully, port " + proxyPort + "......");
 				} else {
 					logger.info("Forward server startup failed, port " + proxyPort + "......");
@@ -128,4 +137,25 @@ public class ForwardServer implements Runnable {
 		this.notifyAll();
 	}
 
+	private class WorkThread extends Thread{
+
+		@Override
+		public void run() {
+			while(true) {
+				try {
+					Thread.sleep(30000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				int size = onlineChannel.size();
+				logger.info("Forward server port " + port + " online size " + size);
+				if(onlineChannel.isEmpty()) {
+					close();
+					notifyAllWait();
+					break;
+				}
+			}
+		}
+		
+	}
 }

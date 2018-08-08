@@ -15,6 +15,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.group.ChannelGroup;
 
 public class ForwardHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
@@ -36,9 +37,12 @@ public class ForwardHandler extends SimpleChannelInboundHandler<ByteBuf> {
 	
 	private boolean closeApp = true;
 	
+	private ChannelGroup onlineChannel;
+	
 	public ForwardHandler(String host,int port,String clientId,
 			boolean closeApp,Channel proxyChannel, 
-			Map<String, ForwardHandler> appHandlerMap) {
+			Map<String, ForwardHandler> appHandlerMap,
+			ChannelGroup onlineChannel) {
 		this.proxyChannel = proxyChannel;
 		this.appHandlerMap = appHandlerMap;
 		this.token = RandomUtil.GetGuid32();
@@ -46,6 +50,7 @@ public class ForwardHandler extends SimpleChannelInboundHandler<ByteBuf> {
 		this.host = host;
 		this.port = port;
 		this.closeApp = closeApp;
+		this.onlineChannel = onlineChannel;
 	}
 	
 	@Override
@@ -83,6 +88,7 @@ public class ForwardHandler extends SimpleChannelInboundHandler<ByteBuf> {
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
 		isClosed = false;
+		onlineChannel.add(ctx.channel());
 		appHandlerMap.put(token, this);
 		Message message = new Message();
 		message.setType(MessageCode.CONNECTION);
@@ -111,6 +117,9 @@ public class ForwardHandler extends SimpleChannelInboundHandler<ByteBuf> {
 		proxyChannel.writeAndFlush(message);
 		
 		appHandlerMap.remove(token);
+		
+		onlineChannel.remove(ctx.channel());
+		
 		isClosed = true;
 		notifyTask();
 	}
