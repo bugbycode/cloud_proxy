@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.jing.cloud.forward.handler.ForwardHandler;
 import com.jing.cloud.forward.server.ForwardServer;
+import com.jing.cloud.forward.service.RegisterPortService;
 import com.jing.cloud.proxy.handler.ServerHandler;
 
 import io.netty.channel.Channel;
@@ -32,6 +33,9 @@ public class SsoController {
 	@Autowired
 	public Map<String,ServerHandler> serverHandlerMap;
 	
+	@Autowired
+	private RegisterPortService registerPortService;
+	
 	@RequestMapping("/getChannel")
 	@ResponseBody
 	public Map<String,Object> getChannel(
@@ -41,8 +45,6 @@ public class SsoController {
 			String host,
 			@RequestParam(name="port",defaultValue = "0") 
 			int port,
-			@RequestParam(name="proxyPort",defaultValue = "0") 
-			int proxyPort,
 			@RequestParam(name="closeApp",defaultValue = "true") 
 			boolean closeApp
 			) throws IOException, InterruptedException{
@@ -54,20 +56,28 @@ public class SsoController {
 			map.put("code", 1);
 			map.put("msg", "Con't find agent client.");
 		}else {
-			ForwardServer server = new ForwardServer(host,port,proxyPort,clientId,closeApp,
-					channel, appHandlerMap,forwardServerMap,serverHandlerMap);
-			server.run();
 			
-			boolean isOpen = server.waitFinish();
+			int proxyPort = registerPortService.registerServerPort();
 			
-			if(isOpen) {
-				map.put("code", 0);
-				map.put("msg", "success");
-				map.put("host", "127.0.0.1");
-				map.put("port", proxyPort);
+			if(proxyPort == 0) {
+				map.put("code", 2);
+				map.put("msg", "Unavailable ports");
 			}else {
-				map.put("code", 1);
-				map.put("msg", "Bind " + proxyPort + " failed.");
+				ForwardServer server = new ForwardServer(host,port,proxyPort,clientId,closeApp,
+						channel, appHandlerMap,forwardServerMap,serverHandlerMap);
+				server.run();
+				
+				boolean isOpen = server.waitFinish();
+				
+				if(isOpen) {
+					map.put("code", 0);
+					map.put("msg", "success");
+					map.put("host", "127.0.0.1");
+					map.put("port", proxyPort);
+				}else {
+					map.put("code", 1);
+					map.put("msg", "Bind " + proxyPort + " failed.");
+				}
 			}
 		}
 		
