@@ -54,6 +54,8 @@ public class ForwardServer implements Runnable {
 	
 	private boolean isOpen = false;
 	
+	private boolean isClosed = true;
+	
 	private ChannelGroup onlineChannel;
 	
 	public ForwardServer(String host,int port,int proxyPort,
@@ -103,7 +105,7 @@ public class ForwardServer implements Runnable {
 						handler.addForwardServer(ForwardServer.this);
 					}
 					isOpen = true;
-					
+					isClosed = false;
 					new WorkThread().start();
 					
 					logger.info("Forward server startup successfully, port " + proxyPort + "......");
@@ -116,6 +118,7 @@ public class ForwardServer implements Runnable {
 	}
 	
 	public void close() {
+		isClosed = true;
 		if(boss != null) {
 			boss.shutdownGracefully();
 		}
@@ -141,7 +144,7 @@ public class ForwardServer implements Runnable {
 
 		@Override
 		public void run() {
-			while(true) {
+			while(!isClosed) {
 				try {
 					Thread.sleep(15000);
 				} catch (InterruptedException e) {
@@ -150,7 +153,6 @@ public class ForwardServer implements Runnable {
 				if(onlineChannel.isEmpty()) {
 					close();
 					notifyAllWait();
-					break;
 				}
 			}
 		}
