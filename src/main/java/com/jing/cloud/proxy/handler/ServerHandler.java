@@ -41,6 +41,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
+		super.channelActive(ctx);
 		logger.info("Agent connection...");
 	}
 
@@ -70,7 +71,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 			
 			Channel clientChannel = onlineProxyClient.get(clientId);
 			
-			if(!(clientChannel != null)) {
+			if(!(clientChannel == null)) {
 				message.setType(MessageCode.REGISTER_ERROR);
 				message.setData(null);
 				channel.writeAndFlush(message);
