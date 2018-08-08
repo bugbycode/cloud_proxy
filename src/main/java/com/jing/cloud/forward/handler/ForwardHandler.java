@@ -126,7 +126,7 @@ public class ForwardHandler extends SimpleChannelInboundHandler<ByteBuf> {
 	
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-		cause.printStackTrace();
+		logger.error(cause.getMessage());
 	}
 
 	private class WorkThread extends Thread {
