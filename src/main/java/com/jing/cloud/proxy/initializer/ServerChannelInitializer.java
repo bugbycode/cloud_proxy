@@ -33,7 +33,6 @@ public class ServerChannelInitializer extends ChannelInitializer<SocketChannel> 
 	
 	@Override
 	protected void initChannel(SocketChannel sc) throws Exception {
-		// 增加任务处理
 		ChannelPipeline p = sc.pipeline();
 		p.addLast(
 				new IdleStateHandler(IdleConfig.READ_IDEL_TIME_OUT, IdleConfig.WRITE_IDEL_TIME_OUT, IdleConfig.ALL_IDEL_TIME_OUT),

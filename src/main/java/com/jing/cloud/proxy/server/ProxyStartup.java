@@ -16,10 +16,10 @@ import io.netty.channel.ChannelHandler;
 public class ProxyStartup implements ApplicationRunner {
 
 	@Value("${spring.netty.port}")
-	private int serverPort; //端口号
+	private int serverPort;
 	
 	@Value("${spring.netty.so_backlog}")
-	private int so_backlog;//连接数
+	private int so_backlog;
 	
 	@Autowired
 	private ChannelHandler serverChannelInitializer;

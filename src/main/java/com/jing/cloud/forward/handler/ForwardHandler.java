@@ -82,14 +82,13 @@ public class ForwardHandler extends SimpleChannelInboundHandler<ByteBuf> {
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
 		isClosed = false;
 		appHandlerMap.put(token, this);
-		//开始连接目标设备
 		Message message = new Message();
 		message.setType(MessageCode.CONNECTION);
 		message.setToken(token);
 		ConnectionInfo conn = new ConnectionInfo(host, port);
 		message.setData(conn);
 		proxyChannel.writeAndFlush(message);
-		//等待连接结果
+
 		Message msg = read();
 		
 		if(msg.getType() == MessageCode.CONNECTION_ERROR || 
@@ -104,8 +103,6 @@ public class ForwardHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-		logger.info("用户客户端与服务器断开连接......");
-		//断开连接
 		Message message = new Message();
 		message.setType(MessageCode.CLOSE_CONNECTION);
 		message.setToken(token);
@@ -135,7 +132,6 @@ public class ForwardHandler extends SimpleChannelInboundHandler<ByteBuf> {
 			try {
 				while(!isClosed) {
 					Message msg = read();
-					//logger.info("transfer " + msg);
 					if(msg.getType() == MessageCode.CLOSE_CONNECTION) {
 						if(closeApp) {
 							ctx.close();

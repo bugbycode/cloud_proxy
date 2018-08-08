@@ -52,7 +52,7 @@ public class SsoController {
 			map.put("code", 0);
 			map.put("msg", "success");
 			map.put("host", "127.0.0.1");
-			map.put("port", 60000);
+			map.put("port", proxyPort);
 		}
 		
 		return map;

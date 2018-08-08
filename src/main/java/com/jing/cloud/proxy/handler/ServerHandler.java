@@ -39,13 +39,13 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
-		logger.info("代理客户端与服务端连接开始...");
+		logger.info("Agent connection...");
 	}
 
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
 		channelGroup.remove(ctx.channel());
-		logger.info("代理客户端与服务端连接关闭...");
+		logger.info("Agent connection closed...");
 	}
 
 	@Override
@@ -53,7 +53,6 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 		loss_connect_time = 0;
 		Channel channel = ctx.channel();
 		Message message = (Message)msg;
-		//logger.info("agent recv " + message);
 		int type = message.getType();
 		Object data = message.getData();
 		String token = message.getToken();
@@ -106,19 +105,17 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 	@Override
 	public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
 		ctx.flush();
-		//logger.info("信息接收完毕...");
 	}
 
 	@Override
 	public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
 		if (evt instanceof IdleStateEvent) {
-			// 服务端对应着读事件，当为READER_IDLE时触发
 			IdleStateEvent event = (IdleStateEvent) evt;
 			if (event.state() == IdleState.READER_IDLE) {
 				loss_connect_time++;
-				logger.info("接收消息超时");
+				logger.info("Read heartbeat timeout.");
 				if (loss_connect_time > 2) {
-					logger.info("关闭不活动的链接");
+					logger.info("Channel timeout.");
 					ctx.channel().close();
 				}
 			} else {
