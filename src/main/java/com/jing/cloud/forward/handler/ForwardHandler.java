@@ -79,7 +79,7 @@ public class ForwardHandler extends SimpleChannelInboundHandler<ByteBuf> {
 		while(queue.isEmpty()) {
 			wait();
 			if(isClosed) {
-				throw new InterruptedException("User client closed." + token);
+				throw new InterruptedException("Client closed." + token);
 			}
 		}
 		return queue.removeFirst();

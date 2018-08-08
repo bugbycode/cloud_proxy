@@ -143,12 +143,10 @@ public class ForwardServer implements Runnable {
 		public void run() {
 			while(true) {
 				try {
-					Thread.sleep(30000);
+					Thread.sleep(15000);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
-				int size = onlineChannel.size();
-				logger.info("Forward server port " + port + " online size " + size);
 				if(onlineChannel.isEmpty()) {
 					close();
 					notifyAllWait();
