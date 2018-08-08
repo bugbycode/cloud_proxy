@@ -72,7 +72,6 @@ public class SsoController {
 				if(isOpen) {
 					map.put("code", 0);
 					map.put("msg", "success");
-					map.put("host", "127.0.0.1");
 					map.put("port", proxyPort);
 				}else {
 					map.put("code", 1);
