@@ -157,4 +157,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 		queue.add(server);
 	}
 	
+	public void removeForwardServer(ForwardServer server) {
+		queue.remove(server);
+	}
 }

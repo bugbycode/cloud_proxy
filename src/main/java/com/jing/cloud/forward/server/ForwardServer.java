@@ -126,6 +126,10 @@ public class ForwardServer implements Runnable {
 			worker.shutdownGracefully();
 		}
 		forwardServerMap.remove(proxyPort);
+		ServerHandler handler = serverHandlerMap.get(clientId);
+		if(handler != null) {
+			handler.removeForwardServer(this);
+		}
 		logger.info("Forward server shutdown, port " + proxyPort + "......");
 	}
 	
