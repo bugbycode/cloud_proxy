@@ -4,7 +4,9 @@
         <wb-resource deploy-path="/" source-path="/src/main/webapp" tag="defaultRootSource"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/java"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/resources"/>
-        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/test/java"/>
+        <dependent-module archiveName="spring-security-oauth2-2.3.4.BUILD-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/spring-security-oauth2/spring-security-oauth2">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
         <dependent-module archiveName="cloud-proxy-commons-0.0.1-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/cloud-proxy-commons/cloud-proxy-commons">
             <dependency-type>uses</dependency-type>
         </dependent-module>
