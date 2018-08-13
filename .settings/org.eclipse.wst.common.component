@@ -10,6 +10,9 @@
         <dependent-module archiveName="cloud-proxy-commons-0.0.1-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/cloud-proxy-commons/cloud-proxy-commons">
             <dependency-type>uses</dependency-type>
         </dependent-module>
+        <dependent-module archiveName="https-commons-0.0.1-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/https-commons/https-commons">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
         <property name="context-root" value="cloud_proxy"/>
         <property name="java-output-path" value="/cloud_proxy/target/classes"/>
     </wb-module>
