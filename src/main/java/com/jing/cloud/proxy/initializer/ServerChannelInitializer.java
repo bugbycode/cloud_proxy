@@ -3,8 +3,11 @@ package com.jing.cloud.proxy.initializer;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Service;
 
+import com.bugbycode.https.HttpsClient;
 import com.jing.cloud.config.IdleConfig;
 import com.jing.cloud.forward.handler.ForwardHandler;
 import com.jing.cloud.handler.MessageDecoder;
@@ -19,6 +22,7 @@ import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
 
+@Configuration
 @Service("serverChannelInitializer")
 public class ServerChannelInitializer extends ChannelInitializer<SocketChannel> {
 
@@ -34,8 +38,20 @@ public class ServerChannelInitializer extends ChannelInitializer<SocketChannel> 
 	@Autowired
 	public Map<String,ServerHandler> serverHandlerMap;
 	
+	@Value("${spring.oauth.oauthUri}")
+	private String oauthUri;
+	
+	@Value("${server.keystorePath}")
+	private String keystorePath;
+	
+	@Value("${server.keystorePassword}")
+	private String keystorePassword;
+	
+	private HttpsClient client;
+	
 	@Override
 	protected void initChannel(SocketChannel sc) throws Exception {
+		this.client = new HttpsClient(keystorePath, keystorePassword);
 		ChannelPipeline p = sc.pipeline();
 		p.addLast(
 				new IdleStateHandler(IdleConfig.READ_IDEL_TIME_OUT, IdleConfig.WRITE_IDEL_TIME_OUT, IdleConfig.ALL_IDEL_TIME_OUT),
@@ -43,7 +59,9 @@ public class ServerChannelInitializer extends ChannelInitializer<SocketChannel> 
 						HandlerConst.LENGTH_FIELD_LENGTH, HandlerConst.LENGTH_AD_JUSTMENT, 
 						HandlerConst.INITIAL_BYTES_TO_STRIP),
 				new MessageEncoder(),
-				new ServerHandler(channelGroup,onlineProxyClient,appHandlerMap,serverHandlerMap)
+				new ServerHandler(channelGroup,onlineProxyClient,
+						appHandlerMap,serverHandlerMap,
+						oauthUri,client)
 		);
 		
 	}

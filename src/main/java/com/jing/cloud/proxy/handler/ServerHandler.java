@@ -1,11 +1,19 @@
 package com.jing.cloud.proxy.handler;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
+import com.bugbycode.https.HttpsClient;
 import com.jing.cloud.forward.handler.ForwardHandler;
 import com.jing.cloud.forward.server.ForwardServer;
 import com.jing.cloud.module.Authentication;
@@ -25,6 +33,8 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 	
 	private int loss_connect_time = 0;
 	
+	private final String GTRANT_TYPE = "client_credentials";
+	
 	private ChannelGroup channelGroup;
 
 	private Map<String, Channel> onlineProxyClient;
@@ -33,6 +43,12 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 	
 	private String clientId = "";
 	
+	private String secret = "";
+	
+	private String oauthUri;
+	
+	private HttpsClient client;
+	
 	private LinkedList<ForwardServer> queue;
 	
 	public Map<String,ServerHandler> serverHandlerMap;
@@ -40,12 +56,16 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 	public ServerHandler(ChannelGroup channelGroup, 
 			Map<String, Channel> onlineProxyClient,
 			Map<String,ForwardHandler> appHandlerMap,
-			Map<String,ServerHandler> serverHandlerMap) {
+			Map<String,ServerHandler> serverHandlerMap,
+			String oauthUri,
+			HttpsClient client) {
 		this.channelGroup = channelGroup;
 		this.onlineProxyClient = onlineProxyClient;
 		this.appHandlerMap = appHandlerMap;
 		this.queue = new LinkedList<ForwardServer>();
 		this.serverHandlerMap = serverHandlerMap;
+		this.oauthUri = oauthUri;
+		this.client = client;
 	}
 
 	@Override
@@ -94,6 +114,22 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 			}
 			
 			this.clientId = clientId;
+			this.secret = authInfo.getSecret();
+			
+			String auth_result = client.getToken(this.oauthUri, GTRANT_TYPE, clientId, secret, "agent");
+			
+			logger.info("auth_result : " + auth_result);
+			
+			JSONObject json = new JSONObject(auth_result);
+			Map<String,Object> map = jsonToMap(json);
+			
+			if(map.containsKey("error")) {
+				message.setType(MessageCode.REGISTER_ERROR);
+				message.setData(null);
+				channel.writeAndFlush(message);
+				ctx.close();
+				return;
+			}
 			
 			message.setType(MessageCode.REGISTER_SUCCESS);
 			message.setData(null);
@@ -112,6 +148,17 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 		}
 		
 		if(type == MessageCode.HEARTBEAT) {
+			String auth_result = client.getToken(this.oauthUri, GTRANT_TYPE, clientId, secret, "agent");
+			
+			logger.info("auth_result : " + auth_result);
+			
+			JSONObject json = new JSONObject(auth_result);
+			Map<String,Object> map = jsonToMap(json);
+			
+			if(map.containsKey("error")) {
+				ctx.close();
+				return;
+			}
 			return;
 		}
 		
@@ -145,6 +192,31 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 				super.userEventTriggered(ctx, evt);
 			}
 		}
+	}
+	
+	private Map<String,Object> jsonToMap(JSONObject json){
+		Map<String,Object> map = new HashMap<String,Object>();
+		@SuppressWarnings("unchecked")
+		Iterator<String> it = json.keys();
+		while(it.hasNext()) {
+			String key = it.next();
+			try {
+				if("authorities".equals(key)) {
+					JSONArray arr = json.getJSONArray(key);
+					int len =arr.length();
+					Collection<String> collection = new ArrayList<String>();
+					for(int index = 0;index < len;index++) {
+						collection.add(arr.getString(index));
+					}
+					map.put(key, collection);
+				}else {
+					map.put(key, json.get(key));
+				}
+			}catch (JSONException e) {
+				throw new RuntimeException(e.getMessage());
+			}
+		}
+		return map;
 	}
 
 	@Override

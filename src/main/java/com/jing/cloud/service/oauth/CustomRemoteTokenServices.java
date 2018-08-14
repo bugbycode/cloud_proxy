@@ -50,7 +50,7 @@ public class CustomRemoteTokenServices extends RemoteTokenServices {
 			Map<String,Object> map = new HashMap<String,Object>(); 
 			while(it.hasNext()) {
 				String key = it.next();
-				if("authorities".equals(key) || "scope".equals(key)) {
+				if("authorities".equals(key)) {
 					JSONArray arr = json.getJSONArray(key);
 					int len =arr.length();
 					Collection<String> collection = new ArrayList<String>();
