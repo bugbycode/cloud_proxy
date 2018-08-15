@@ -101,4 +101,10 @@ public class SsoController {
 		
 		return map;
 	}
+	
+	@RequestMapping("/getConnCount")
+	@ResponseBody
+	public int getConnCount() {
+		return serverHandlerMap.size();
+	}
 }
