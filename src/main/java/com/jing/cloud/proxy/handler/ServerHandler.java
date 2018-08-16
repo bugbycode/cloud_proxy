@@ -118,7 +118,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 			
 			String auth_result = client.getToken(this.oauthUri, GTRANT_TYPE, clientId, secret, "agent");
 			
-			logger.info("auth_result : " + auth_result);
+			//logger.info("auth_result : " + auth_result);
 			
 			JSONObject json = new JSONObject(auth_result);
 			Map<String,Object> map = jsonToMap(json);
@@ -150,7 +150,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 		if(type == MessageCode.HEARTBEAT) {
 			String auth_result = client.getToken(this.oauthUri, GTRANT_TYPE, clientId, secret, "agent");
 			
-			logger.info("auth_result : " + auth_result);
+			//logger.info("auth_result : " + auth_result);
 			
 			JSONObject json = new JSONObject(auth_result);
 			Map<String,Object> map = jsonToMap(json);
