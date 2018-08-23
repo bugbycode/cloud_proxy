@@ -2,7 +2,10 @@ package com.jing.cloud.controller.api;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -106,5 +109,14 @@ public class SsoController {
 	@ResponseBody
 	public int getConnCount() {
 		return serverHandlerMap.size();
+	}
+	
+	@RequestMapping("/getAllClientId")
+	@ResponseBody
+	public Map<String,Object> getAllClientId(){
+		Map<String,Object> map = new HashMap<String,Object>();
+		map.put("code", 0);
+		map.put("data", onlineProxyClient.keySet());
+		return map;
 	}
 }
