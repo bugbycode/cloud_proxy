@@ -14,6 +14,7 @@ import com.jing.cloud.handler.MessageDecoder;
 import com.jing.cloud.handler.MessageEncoder;
 import com.jing.cloud.module.HandlerConst;
 import com.jing.cloud.proxy.handler.ServerHandler;
+import com.thread.RecvMessageThreadPool;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -33,10 +34,13 @@ public class ServerChannelInitializer extends ChannelInitializer<SocketChannel> 
 	private Map<String,Channel> onlineProxyClient;
 	
 	@Autowired
-	public Map<String,ForwardHandler> appHandlerMap;
+	private Map<String,ForwardHandler> appHandlerMap;
 	
 	@Autowired
-	public Map<String,ServerHandler> serverHandlerMap;
+	private Map<String,ServerHandler> serverHandlerMap;
+	
+	@Autowired
+	private Map<String,RecvMessageThreadPool> recvMessagePool;
 	
 	@Value("${spring.oauth.oauthUri}")
 	private String oauthUri;
@@ -61,7 +65,7 @@ public class ServerChannelInitializer extends ChannelInitializer<SocketChannel> 
 				new MessageEncoder(),
 				new ServerHandler(channelGroup,onlineProxyClient,
 						appHandlerMap,serverHandlerMap,
-						oauthUri,client)
+						oauthUri,client,recvMessagePool)
 		);
 		
 	}

@@ -19,6 +19,7 @@ import com.jing.cloud.forward.server.ForwardServer;
 import com.jing.cloud.module.Authentication;
 import com.jing.cloud.module.Message;
 import com.jing.cloud.module.MessageCode;
+import com.thread.RecvMessageThreadPool;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -51,14 +52,17 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 	
 	private LinkedList<ForwardServer> queue;
 	
-	public Map<String,ServerHandler> serverHandlerMap;
+	private Map<String,ServerHandler> serverHandlerMap;
+	
+	private Map<String,RecvMessageThreadPool> recvMessagePool;
 
 	public ServerHandler(ChannelGroup channelGroup, 
 			Map<String, Channel> onlineProxyClient,
 			Map<String,ForwardHandler> appHandlerMap,
 			Map<String,ServerHandler> serverHandlerMap,
 			String oauthUri,
-			HttpsClient client) {
+			HttpsClient client,
+			Map<String,RecvMessageThreadPool> recvMessagePool) {
 		this.channelGroup = channelGroup;
 		this.onlineProxyClient = onlineProxyClient;
 		this.appHandlerMap = appHandlerMap;
@@ -66,6 +70,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 		this.serverHandlerMap = serverHandlerMap;
 		this.oauthUri = oauthUri;
 		this.client = client;
+		this.recvMessagePool = recvMessagePool;
 	}
 
 	@Override
@@ -167,6 +172,16 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 			ForwardHandler forward = appHandlerMap.get(token);
 			if(forward != null) {
 				forward.sendMessage(message);
+			}
+			return;
+		}
+		
+		if(type == MessageCode.SCAN_OS_RESULT) {
+			RecvMessageThreadPool rmtp = this.recvMessagePool.get(token);
+			logger.info(message);
+			logger.info(rmtp);
+			if(rmtp != null) {
+				rmtp.addMessage(message);
 			}
 			return;
 		}
