@@ -11,7 +11,7 @@ public class RecvMessageThreadPool extends ThreadGroup {
 	
 	public LinkedList<Message> queue;
 	
-	private final int WAIT_MAX_TIME = 60000;
+	private final int WAIT_MAX_TIME = 120000;
 	
 	private boolean isClosed = true;
 	
