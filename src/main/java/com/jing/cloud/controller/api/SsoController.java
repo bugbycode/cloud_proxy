@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,6 +25,8 @@ import io.netty.channel.Channel;
 @Controller
 @RequestMapping("/api")
 public class SsoController {
+	
+	private static final Logger logger = LogManager.getLogger(SsoController.class);
 	
 	@Autowired
 	private Map<String,Channel> onlineProxyClient;
@@ -51,6 +55,9 @@ public class SsoController {
 			@RequestParam(name="closeApp",defaultValue = "true") 
 			boolean closeApp
 			) throws IOException, InterruptedException{
+		
+		logger.info("clientId : " + clientId);
+		logger.info("onlineProxyClient : " + onlineProxyClient);
 		Map<String,Object> map = new HashMap<String,Object>();
 		
 		Channel channel = onlineProxyClient.get(clientId);

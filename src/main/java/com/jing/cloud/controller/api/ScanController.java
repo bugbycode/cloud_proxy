@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +24,8 @@ import io.netty.channel.Channel;
 @RequestMapping("/api")
 public class ScanController {
 	
+	private static final Logger logger = LogManager.getLogger(ScanController.class);
+	
 	@Autowired
 	private Map<String,RecvMessageThreadPool> recvMessagePool;
 	
@@ -31,6 +35,8 @@ public class ScanController {
 	@RequestMapping("/scanOs")
 	@ResponseBody
 	public Map<String,Object> scanOs(String clientId,String host){
+		logger.info("clientId : " + clientId);
+		logger.info("onlineProxyClient : " + onlineProxyClient);
 		Map<String,Object> map = new HashMap<String,Object>();
 		Channel channel = onlineProxyClient.get(clientId);
 		if(channel == null) {
